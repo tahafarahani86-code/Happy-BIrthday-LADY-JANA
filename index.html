@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Happy Birthday JANA ❤️</title>
+  <title>Happy Birthday LADY ELHAM ❤️</title>
 
   <style>
     * {
@@ -121,9 +121,9 @@
     }
 
     function drawName(beat) {
-      const letters = ["J", "A", "N", "A"];
+      const name = "LADY ELHAM";
       const fontSize = Math.max(
-        8, Math.min(width, height) * 0.018
+        10, Math.min(width, height) * 0.035
       );
 
       ctx.save();
@@ -132,16 +132,19 @@
       ctx.font = `bold ${fontSize}px Arial, sans-serif`;
       ctx.fillStyle = "#fff0f4";
       ctx.shadowColor = "#ff1744";
-      ctx.shadowBlur = 12;
+      ctx.shadowBlur = 16;
 
-      const x = width / 2;
-      const startY =
-        height / 2 - Math.min(width, height) * 0.13 * beat;
-      const spacing = fontSize * 0.9;
-
-      letters.forEach((letter, i) => {
-        ctx.fillText(letter, x, startY + i * spacing);
-      });
+      // Keep the longer name on one elegant line inside the heart.
+      const fittedSize = Math.min(
+        fontSize,
+        (width * 0.58) / (ctx.measureText(name).width / fontSize)
+      );
+      ctx.font = `bold ${fittedSize}px Arial, sans-serif`;
+      ctx.fillText(
+        name,
+        width / 2,
+        height / 2 - Math.min(width, height) * 0.035 * beat
+      );
 
       ctx.restore();
     }
@@ -228,7 +231,7 @@
         N: [[0,6,0,0,4,6,4,0]]
       };
 
-      const message = "HAPPY BIRTHDAY JANA";
+      const message = "HAPPY BIRTHDAY LADY ELHAM";
       const advance = 4.8;
       const spaceWidth = 2.5;
       const units = [...message].reduce(
