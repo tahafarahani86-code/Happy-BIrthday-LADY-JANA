@@ -47,7 +47,6 @@
 
 <body>
   <canvas id="heartCanvas"></canvas>
-  <div class="caption">MADE WITH LOVE ♥</div>
 
   <script>
     const canvas = document.getElementById("heartCanvas");
@@ -121,30 +120,41 @@
     }
 
     function drawName(beat) {
-      const name = "LADY ELHAM";
-      const fontSize = Math.max(
-        10, Math.min(width, height) * 0.035
-      );
+      const minSide = Math.min(width, height);
+      const fontSize = Math.max(6, minSide * 0.011);
+
+      const lineHeight = fontSize * 1.0;
+      const gap = lineHeight * 0.3;
+      const lines = ["L", "A", "D", "Y", "", "E", "L", "H", "A", "M"];
+      const totalHeight = lineHeight * 9 + gap;
 
       ctx.save();
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.font = `bold ${fontSize}px Arial, sans-serif`;
-      ctx.fillStyle = "#fff0f4";
+      ctx.fillStyle = "#ffffff";
       ctx.shadowColor = "#ff1744";
-      ctx.shadowBlur = 16;
+      ctx.shadowBlur = 19;
+      ctx.lineWidth = 0.7;
+      ctx.strokeStyle = "#fff0f4";
 
-      // Keep the longer name on one elegant line inside the heart.
-      const fittedSize = Math.min(
-        fontSize,
-        (width * 0.58) / (ctx.measureText(name).width / fontSize)
-      );
-      ctx.font = `bold ${fittedSize}px Arial, sans-serif`;
-      ctx.fillText(
-        name,
-        width / 2,
-        height / 2 - Math.min(width, height) * 0.035 * beat
-      );
+      const centerX = width / 2;
+      const targetCenterY = height / 2 - minSide * 0.084;
+      const offset = minSide * 0.008 * beat;
+
+      let y = targetCenterY - totalHeight / 2 - offset
+        + lineHeight / 2;
+
+      for (const letter of lines) {
+        if (letter === "") {
+          y += gap;
+          continue;
+        }
+
+        ctx.strokeText(letter, centerX, y);
+        ctx.fillText(letter, centerX, y);
+        y += lineHeight;
+      }
 
       ctx.restore();
     }
@@ -154,8 +164,7 @@
       ctx.clearRect(0, 0, width, height);
 
       const centerY = height * 0.50;
-      const progress = Math.max(0, Math.min(1, elapsed / ECG_DURATION));
-      const introDuration = 850;
+      const introDuration = 0;
 
       ctx.save();
       ctx.strokeStyle = "#ff1744";
@@ -165,139 +174,54 @@
       ctx.shadowColor = "#ff1744";
       ctx.shadowBlur = 16;
 
-      // First, draw a moving ECG pulse.
-      if (elapsed < introDuration) {
-        const scanX = width * (elapsed / introDuration);
-        const period = Math.max(180, Math.min(width * 0.38, 250));
-        const amp = Math.min(height * 0.09, 38);
-
-        function ecgY(x) {
-          const t = (x % period) / period;
-
-          // Classic ECG: P wave, sharp QRS spike, then T wave.
-          if (t < 0.16) return centerY;
-          if (t < 0.22) return centerY - amp * 0.18
-            * Math.sin(((t - 0.16) / 0.06) * Math.PI);
-          if (t < 0.36) return centerY;
-          if (t < 0.40) return centerY + amp * 0.22
-            * ((t - 0.36) / 0.04);
-          if (t < 0.45) return centerY + amp * 0.22
-            - amp * 1.45 * ((t - 0.40) / 0.05);
-          if (t < 0.50) return centerY - amp * 1.23
-            + amp * 1.48 * ((t - 0.45) / 0.05);
-          if (t < 0.70) return centerY;
-          if (t < 0.84) return centerY - amp * 0.24
-            * Math.sin(((t - 0.70) / 0.14) * Math.PI);
-          return centerY;
-        }
-
-        ctx.beginPath();
-        ctx.moveTo(0, centerY);
-        for (let x = 2; x <= scanX; x += 2) {
-          ctx.lineTo(x, ecgY(x));
-        }
-        // Layered red neon with a fine white core.
-        ctx.strokeStyle = "#ff003c";
-        ctx.lineWidth = 3;
-        ctx.shadowBlur = 22;
-        ctx.stroke();
-
-        ctx.strokeStyle = "#ff1744";
-        ctx.lineWidth = 1.8;
-        ctx.shadowBlur = 12;
-        ctx.stroke();
-
-        ctx.strokeStyle = "#fff0f4";
-        ctx.lineWidth = 0.8;
-        ctx.shadowBlur = 5;
-        ctx.stroke();
-
-        ctx.restore();
-        return;
-      }
-
-      // Each character is built from neon vector strokes, not a font.
-      const glyphs = {
-        H: [[0,0,0,6],[4,0,4,6],[0,3,4,3]],
-        A: [[0,6,0.5,1,2,0,3.5,1,4,6],[0.7,4,3.3,4]],
-        P: [[0,6,0,0,3,0,4,1,4,2,3,3,0,3]],
-        Y: [[0,0,2,3,4,0],[2,3,2,6]],
-        B: [[0,6,0,0,2.8,0,4,1,4,2,3,3,0,3],[3,3,4,4,4,5,3,6,0,6]],
-        I: [[0,0,4,0],[2,0,2,6],[0,6,4,6]],
-        R: [[0,6,0,0,3,0,4,1,4,2,3,3,0,3],[2,3,4,6]],
-        T: [[0,0,4,0],[2,0,2,6]],
-        D: [[0,6,0,0,2.5,0,4,1,4,5,2.5,6,0,6]],
-        J: [[0,0,4,0],[3.5,0,3.5,5,2.5,6,1,6,0,5]],
-        N: [[0,6,0,0,4,6,4,0]]
-      };
-
+      // Zapfino birthday lettering with the original neon reveal.
       const message = "HAPPY BIRTHDAY LADY ELHAM";
-      const advance = 4.8;
-      const spaceWidth = 2.5;
-      const units = [...message].reduce(
-        (sum, ch) => sum + (ch === " " ? spaceWidth : advance), 0
-      );
-      const scale = Math.min(
-        (width - 28) / units,
-        Math.min(width, height) * 0.045,
-        6
-      );
-      const totalWidth = units * scale;
-      const left = (width - totalWidth) / 2;
-      const top = centerY - 3 * scale;
-      const reveal = Math.max(
-        0, Math.min(1, (elapsed - introDuration) / (ECG_DURATION - introDuration - 1000))
-      );
-      const revealX = left + totalWidth * reveal;
 
       ctx.save();
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.font = '26px "Zapfino", cursive';
+
+      const measuredWidth = ctx.measureText(message).width || 1;
+      const fontSize = Math.min(
+        26,
+        height * 0.055,
+        (width - 80) * 26 / measuredWidth
+      );
+
+      ctx.font = `${fontSize}px "Zapfino", cursive`;
+
+      const totalWidth = ctx.measureText(message).width;
+      const left = (width - totalWidth) / 2;
+
+      const reveal = Math.max(
+        0,
+        Math.min(1, (elapsed - introDuration) /
+          (ECG_DURATION - introDuration - 1000))
+      );
+
+      const revealX = left + totalWidth * reveal;
+
       ctx.beginPath();
-      ctx.rect(left - 2, top - 3, totalWidth * reveal, 6 * scale + 6);
+      ctx.rect(left - 2, 0, totalWidth * reveal, height);
       ctx.clip();
 
-      let x = left;
+      ctx.lineJoin = "round";
+      ctx.strokeStyle = "#ff003c";
+      ctx.lineWidth = Math.max(1.5, fontSize * 0.055);
+      ctx.shadowColor = "#ff003c";
+      ctx.shadowBlur = 22;
+      ctx.strokeText(message, width / 2, centerY);
 
-      for (const ch of message) {
-        if (ch === " ") {
-          x += spaceWidth * scale;
-          continue;
-        }
+      ctx.strokeStyle = "#ff1744";
+      ctx.lineWidth = Math.max(1, fontSize * 0.03);
+      ctx.shadowBlur = 12;
+      ctx.strokeText(message, width / 2, centerY);
 
-        const strokes = glyphs[ch];
-        if (strokes) {
-          for (const points of strokes) {
-            ctx.beginPath();
-            for (let i = 0; i < points.length; i += 2) {
-              const gx = points[i];
-              const gy = points[i + 1];
-              // A subtle italic slant for a more elegant lettering style.
-              const px = x + (gx + (6 - gy) * 0.18) * scale;
-              const py = top + gy * scale;
-              if (i === 0) ctx.moveTo(px, py);
-              else ctx.lineTo(px, py);
-            }
-
-            // Three neon layers: red glow, vivid red, and a white-hot core.
-            ctx.strokeStyle = "#ff003c";
-            ctx.lineWidth = Math.max(2, scale * 0.34);
-            ctx.shadowColor = "#ff003c";
-            ctx.shadowBlur = 20;
-            ctx.stroke();
-
-            ctx.strokeStyle = "#ff1744";
-            ctx.lineWidth = Math.max(1.5, scale * 0.18);
-            ctx.shadowBlur = 10;
-            ctx.stroke();
-
-            ctx.strokeStyle = "#fff0f4";
-            ctx.lineWidth = Math.max(1, scale * 0.07);
-            ctx.shadowBlur = 5;
-            ctx.stroke();
-          }
-        }
-
-        x += advance * scale;
-      }
+      ctx.fillStyle = "#fff0f4";
+      ctx.shadowColor = "#fff0f4";
+      ctx.shadowBlur = 5;
+      ctx.fillText(message, width / 2, centerY);
 
       ctx.restore();
 
