@@ -55,6 +55,7 @@
     let width, height;
     let startTime = performance.now();
 
+    const ECG_TRACE_DURATION = 1300;
     const ECG_DURATION = 5000;
     const HEART_START = ECG_DURATION;
 
@@ -125,8 +126,8 @@
 
       const lineHeight = fontSize * 1.0;
       const gap = lineHeight * 0.3;
-      const lines = ["L", "A", "D", "Y", "", "E", "L", "H", "A", "M"];
-      const totalHeight = lineHeight * 9 + gap;
+      const lines = ["L", "A", "D", "Y", "", "J", "A", "N", "A"];
+      const totalHeight = lineHeight * 8 + gap;
 
       ctx.save();
       ctx.textAlign = "center";
@@ -164,17 +165,65 @@
       ctx.clearRect(0, 0, width, height);
 
       const centerY = height * 0.50;
-      const introDuration = 0;
 
-      ctx.save();
-      ctx.strokeStyle = "#ff1744";
-      ctx.lineWidth = 2;
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-      ctx.shadowColor = "#ff1744";
-      ctx.shadowBlur = 16;
+      // First: a glowing ECG line travels across the screen.
+      if (elapsed < ECG_TRACE_DURATION) {
+        const progress = Math.max(0, Math.min(1, elapsed / ECG_TRACE_DURATION));
+        const scanX = width * progress;
 
-      // Zapfino birthday lettering with the original neon reveal.
+        function ecgY(x) {
+          const p = x / width;
+          const pulse = (center, spread) =>
+            Math.exp(-Math.pow((p - center) / spread, 2));
+
+          const signal =
+            -0.10 * pulse(0.27, 0.025) +
+             0.14 * pulse(0.465, 0.010) -
+             0.78 * pulse(0.495, 0.008) +
+             0.24 * pulse(0.520, 0.012) -
+             0.20 * pulse(0.72, 0.045);
+
+          return centerY + signal * Math.min(height * 0.42, 190);
+        }
+
+        ctx.save();
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+
+        const drawTrace = (color, lineWidth, blur) => {
+          ctx.beginPath();
+          for (let x = 0; x <= scanX; x += 3) {
+            const y = ecgY(x);
+            if (x === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          }
+          if (scanX > 0) {
+            ctx.strokeStyle = color;
+            ctx.lineWidth = lineWidth;
+            ctx.shadowColor = color;
+            ctx.shadowBlur = blur;
+            ctx.stroke();
+          }
+        };
+
+        drawTrace("#ff003c", 6, 26);
+        drawTrace("#ff1744", 3, 17);
+        drawTrace("#fff0f4", 1.2, 7);
+
+        if (scanX > 0) {
+          ctx.beginPath();
+          ctx.arc(scanX, ecgY(scanX), 3, 0, Math.PI * 2);
+          ctx.fillStyle = "#fff0f4";
+          ctx.shadowColor = "#ff1744";
+          ctx.shadowBlur = 22;
+          ctx.fill();
+        }
+
+        ctx.restore();
+        return;
+      }
+
+      // After the ECG, reveal the LADY JANA birthday message.
       const message = "HAPPY BIRTHDAY LADY JANA";
 
       ctx.save();
@@ -193,13 +242,12 @@
 
       const totalWidth = ctx.measureText(message).width;
       const left = (width - totalWidth) / 2;
-
+      const textElapsed = elapsed - ECG_TRACE_DURATION;
+      const textDuration = ECG_DURATION - ECG_TRACE_DURATION;
       const reveal = Math.max(
         0,
-        Math.min(1, (elapsed - introDuration) /
-          (ECG_DURATION - introDuration - 1000))
+        Math.min(1, textElapsed / (textDuration - 1000))
       );
-
       const revealX = left + totalWidth * reveal;
 
       ctx.beginPath();
@@ -225,7 +273,6 @@
 
       ctx.restore();
 
-      // A glowing cursor marks the point where the neon line is being drawn.
       if (reveal > 0 && reveal < 1) {
         ctx.beginPath();
         ctx.arc(revealX, centerY, 2.5, 0, Math.PI * 2);
@@ -233,8 +280,6 @@
         ctx.shadowBlur = 20;
         ctx.fill();
       }
-
-      ctx.restore();
     }
 
 
