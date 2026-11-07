@@ -47,6 +47,7 @@
 
 <body>
   <canvas id="heartCanvas"></canvas>
+  <div class="caption">MADE WITH LOVE ❤️</div>
 
   <script>
     const canvas = document.getElementById("heartCanvas");
@@ -55,8 +56,7 @@
     let width, height;
     let startTime = performance.now();
 
-    const ECG_TRACE_DURATION = 1300;
-    const ECG_DURATION = 5000;
+    const ECG_DURATION = 7000;
     const HEART_START = ECG_DURATION;
 
     function resize() {
@@ -126,8 +126,8 @@
 
       const lineHeight = fontSize * 1.0;
       const gap = lineHeight * 0.3;
-      const lines = ["L", "A", "D", "Y", "", "J", "A", "N", "A"];
-      const totalHeight = lineHeight * 8 + gap;
+      const lines = ["L", "A", "D", "Y", "J", "A", "N", "A"];
+      const totalHeight = lineHeight * 8;
 
       ctx.save();
       ctx.textAlign = "center";
@@ -165,65 +165,79 @@
       ctx.clearRect(0, 0, width, height);
 
       const centerY = height * 0.50;
+      const waveformDuration = 4000;
 
-      // First: a glowing ECG line travels across the screen.
-      if (elapsed < ECG_TRACE_DURATION) {
-        const progress = Math.max(0, Math.min(1, elapsed / ECG_TRACE_DURATION));
-        const scanX = width * progress;
+      // Seven consecutive, short neon ECG beats.
+      if (elapsed < waveformDuration) {
+        const progress = Math.max(0, Math.min(1, elapsed / waveformDuration));
+        const points = [
+          [0.00, 0],
+          [0.025, 0], [0.040, 0.035], [0.055, 0],
+          [0.070, -0.05], [0.085, 0.14], [0.100, -0.06],
+          [0.115, 0], [0.135, 0.10], [0.155, 0],
 
-        function ecgY(x) {
-          const p = x / width;
-          const pulse = (center, spread) =>
-            Math.exp(-Math.pow((p - center) / spread, 2));
+          [0.165, 0], [0.180, 0.035], [0.195, 0],
+          [0.210, -0.05], [0.225, 0.14], [0.240, -0.06],
+          [0.255, 0], [0.275, 0.10], [0.295, 0],
 
-          const signal =
-            -0.10 * pulse(0.27, 0.025) +
-             0.14 * pulse(0.465, 0.010) -
-             0.78 * pulse(0.495, 0.008) +
-             0.24 * pulse(0.520, 0.012) -
-             0.20 * pulse(0.72, 0.045);
+          [0.305, 0], [0.320, 0.035], [0.335, 0],
+          [0.350, -0.05], [0.365, 0.14], [0.380, -0.06],
+          [0.395, 0], [0.415, 0.10], [0.435, 0],
 
-          return centerY + signal * Math.min(height * 0.42, 190);
-        }
+          [0.445, 0], [0.460, 0.035], [0.475, 0],
+          [0.490, -0.05], [0.505, 0.14], [0.520, -0.06],
+          [0.535, 0], [0.555, 0.10], [0.575, 0],
+
+          [0.585, 0], [0.600, 0.035], [0.615, 0],
+          [0.630, -0.05], [0.645, 0.14], [0.660, -0.06],
+          [0.675, 0], [0.695, 0.10], [0.715, 0],
+
+          [0.725, 0], [0.740, 0.035], [0.755, 0],
+          [0.770, -0.05], [0.785, 0.14], [0.800, -0.06],
+          [0.815, 0], [0.835, 0.10], [0.855, 0],
+
+          [0.865, 0], [0.880, 0.035], [0.895, 0],
+          [0.910, -0.05], [0.925, 0.14], [0.940, -0.06],
+          [0.955, 0], [0.975, 0.10], [1.00, 0]
+        ];
 
         ctx.save();
+        ctx.beginPath();
+        ctx.rect(0, 0, width * (0.04 + 0.92 * progress), height);
+        ctx.clip();
+
+        ctx.beginPath();
+        points.forEach(([x, y], i) => {
+          const px = width * (0.04 + x * 0.92);
+          const py = centerY - y * Math.min(width, height) * 0.55;
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        });
+
         ctx.lineCap = "round";
         ctx.lineJoin = "round";
 
-        const drawTrace = (color, lineWidth, blur) => {
-          ctx.beginPath();
-          for (let x = 0; x <= scanX; x += 3) {
-            const y = ecgY(x);
-            if (x === 0) ctx.moveTo(x, y);
-            else ctx.lineTo(x, y);
-          }
-          if (scanX > 0) {
-            ctx.strokeStyle = color;
-            ctx.lineWidth = lineWidth;
-            ctx.shadowColor = color;
-            ctx.shadowBlur = blur;
-            ctx.stroke();
-          }
-        };
+        ctx.strokeStyle = "#ff003c";
+        ctx.lineWidth = 5;
+        ctx.shadowColor = "#ff003c";
+        ctx.shadowBlur = 24;
+        ctx.stroke();
 
-        drawTrace("#ff003c", 6, 26);
-        drawTrace("#ff1744", 3, 17);
-        drawTrace("#fff0f4", 1.2, 7);
+        ctx.strokeStyle = "#ff1744";
+        ctx.lineWidth = 2.5;
+        ctx.shadowBlur = 16;
+        ctx.stroke();
 
-        if (scanX > 0) {
-          ctx.beginPath();
-          ctx.arc(scanX, ecgY(scanX), 3, 0, Math.PI * 2);
-          ctx.fillStyle = "#fff0f4";
-          ctx.shadowColor = "#ff1744";
-          ctx.shadowBlur = 22;
-          ctx.fill();
-        }
+        ctx.strokeStyle = "#fff0f4";
+        ctx.lineWidth = 1;
+        ctx.shadowBlur = 7;
+        ctx.stroke();
 
         ctx.restore();
         return;
       }
 
-      // After the ECG, reveal the LADY JANA birthday message.
+      // Reveal the birthday message after the ECG.
       const message = "HAPPY BIRTHDAY LADY JANA";
 
       ctx.save();
@@ -242,11 +256,10 @@
 
       const totalWidth = ctx.measureText(message).width;
       const left = (width - totalWidth) / 2;
-      const textElapsed = elapsed - ECG_TRACE_DURATION;
-      const textDuration = ECG_DURATION - ECG_TRACE_DURATION;
       const reveal = Math.max(
         0,
-        Math.min(1, textElapsed / (textDuration - 1000))
+        Math.min(1, (elapsed - waveformDuration) /
+          (ECG_DURATION - waveformDuration - 1000))
       );
       const revealX = left + totalWidth * reveal;
 
