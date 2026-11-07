@@ -167,37 +167,28 @@
       const centerY = height * 0.50;
       const waveformDuration = 4000;
 
-      // Restore the classic ECG waveform: seven evenly spaced heartbeats.
+      // Seven distinct beats, with a perfectly flat line between each beat.
       if (elapsed < waveformDuration) {
         const progress = Math.max(0, Math.min(1, elapsed / waveformDuration));
         const scanX = width * progress;
         const period = Math.max(1, width / 7);
-        const amp = Math.min(height * 0.06, 28);
+        const amp = Math.min(height * 0.055, 26);
 
         function ecgY(x) {
           const t = (x % period) / period;
 
-          // P wave
-          if (t < 0.16) return centerY;
-          if (t < 0.22) return centerY - amp * 0.18
-            * Math.sin(((t - 0.16) / 0.06) * Math.PI);
+          // Long, straight baseline before the next heartbeat.
+          if (t < 0.36 || t >= 0.54) return centerY;
 
-          // Flat segment before the QRS complex
-          if (t < 0.36) return centerY;
-
-          // Q, R and S waves: one clear, short heartbeat spike
+          // Short QRS spike: down, sharp rise, then down and back to baseline.
           if (t < 0.40) return centerY + amp * 0.22
             * ((t - 0.36) / 0.04);
           if (t < 0.45) return centerY + amp * 0.22
             - amp * 1.45 * ((t - 0.40) / 0.05);
           if (t < 0.50) return centerY - amp * 1.23
             + amp * 1.48 * ((t - 0.45) / 0.05);
-
-          // T wave
-          if (t < 0.70) return centerY;
-          if (t < 0.84) return centerY - amp * 0.24
-            * Math.sin(((t - 0.70) / 0.14) * Math.PI);
-          return centerY;
+          return centerY + amp * 0.25
+            * (1 - (t - 0.50) / 0.04);
         }
 
         ctx.save();
@@ -220,7 +211,7 @@
           }
         };
 
-        // Keep the original layered red neon and fine white center line.
+        // Original layered red neon with a fine white center line.
         drawTrace("#ff003c", 5, 24);
         drawTrace("#ff1744", 2.5, 16);
         drawTrace("#fff0f4", 1, 7);
